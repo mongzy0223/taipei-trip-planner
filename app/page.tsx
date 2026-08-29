@@ -1,0 +1,120 @@
+'use client';
+import { useEffect, useState } from 'react';
+
+type Stop={time:string;title:string;tag:string;duration:string;note:string;route?:string;address?:string;map?:string;alert?:string;queueUrl?:string;bookingUrl?:string;bookingLabel?:string;purchaseUrl?:string;prayer?:boolean};
+const days:{date:string;weekday:string;title:string;color:string;stops:Stop[]}[]=[
+{date:'8.31',weekday:'MON',title:'到埗・西門・京站・南機場',color:'coral',stops:[
+{time:'11:15',title:'HX252 抵達桃園機場 T2',tag:'FLIGHT',duration:'預留 75–90 分鐘',note:'09:15 香港起飛，預定 11:15 抵達。入境、領行李、買／增值悠遊卡；以當日航班為準。',route:'T2 B2 跟「機場捷運」指示走到 A13。'},
+{time:'12:35',title:'機場捷運 → A1 台北車站',tag:'TRAIN',duration:'直達車約 39 分鐘',note:'搭紫色直達車；到 A1 後由 6 號出口方向步行到酒店。',route:'A13 機場第二航廈 → A1 台北車站；落車後步行約 7–10 分鐘。',map:'https://www.google.com/maps/search/?api=1&query=城市商旅台北站前館'},
+{time:'13:50',title:'城市商旅站前館',tag:'HOTEL',duration:'約 20 分鐘',note:'寄存行李／辦理入住。酒店：台北市大同區塔城街 11 號。',route:'去西門金鋒：① 步行約 15–20 分鐘；② 步行 5–7 分鐘到北門站，搭綠線 1 站到西門，再步行 6–8 分鐘；③ Uber 約 5–10 分鐘。捷運未必較快，但可少行一段。'},
+{time:'14:15',title:'西門金鋒魯肉飯',tag:'EAT',duration:'45 分鐘',note:'今次唯一一餐滷肉飯。避免豆類／豆製品：不要點油豆腐、菜魯，醬汁成分可再問店員。',address:'萬華區昆明街 89 號',map:'https://www.google.com/maps/search/?api=1&query=西門金鋒魯肉飯'},
+{time:'15:10',title:'西門町＋AIR SPACE',tag:'SHOP',duration:'2 小時',note:'AIR SPACE LADY 西門店平日 13:00–23:00；慢慢行街，唔使趕。',route:'金鋒步行約 4–7 分鐘到西門商圈。',map:'https://www.google.com/maps/search/?api=1&query=AIR+SPACE+LADY+西門店'},
+{time:'17:15',title:'西門 → 京站時尚廣場',tag:'MRT',duration:'約 15–25 分鐘',note:'西門站搭藍線 1 站到台北車站，再跟京站／台北轉運站指示步行；不想找地下通道可 Uber 約 5–10 分鐘。'},
+{time:'17:40',title:'天線寶寶 Pop-up Store',tag:'POPUP',duration:'約 35–45 分鐘',note:'台灣首間天線寶寶快閃店，有五個打卡場景及過百款周邊；先影相再慢慢揀商品，Solo 逛約 40 分鐘足夠。',address:'京站時尚廣場 1F 經典大道／大門口',map:'https://www.google.com/maps/search/?api=1&query=京站時尚廣場',alert:'活動期 2026/07/30–09/05；星期一 11:00–21:30'},
+{time:'18:25',title:'返酒店休息',tag:'RESET',duration:'約 1 小時 15 分',note:'由京站步行約 10–15 分鐘返酒店；買到周邊可以先放低，休息後再去夜市。'},
+{time:'19:40',title:'前往南機場夜市',tag:'TAXI',duration:'約 20–30 分鐘',note:'南機場未有捷運直達，兩人以上叫車最省力。',route:'建議：酒店直接叫車到「南機場夜市牌樓」。'},
+{time:'20:10',title:'南機場夜市',tag:'NIGHT',duration:'1.5–2 小時',note:'順序：山內雞肉 → 鹽酥雞＋甜不辣 → 地瓜球；食得落先加雞排／烤粟米。',map:'https://www.google.com/maps/search/?api=1&query=南機場夜市'},
+{time:'22:00',title:'返酒店',tag:'TAXI',duration:'約 15 分鐘',note:'夜晚建議直接叫車，保留體力。'}]},
+{date:'9.01',weekday:'TUE',title:'華山・漢堡・赤峰・按摩',color:'blue',stops:[
+{time:'08:50',title:'起身準備',tag:'START',duration:'約 25 分鐘',note:'今日只係為青島飯糰早少少起身；買完會返酒店食同休息。'},
+{time:'09:15',title:'前往青島飯糰',tag:'MOVE',duration:'約 5–20 分鐘',note:'避開接近收檔時段，亦減低排隊後售罄風險。',route:'步行約 15–20 分鐘；或 Uber 約 5–10 分鐘。'},
+{time:'09:30',title:'青島飯糰',tag:'BREAKFAST',duration:'約 15–20 分鐘',note:'買外帶紫米飯糰；內餡通常有肉鬆、油條、酸菜、菜脯及蛋，落單要再確認有冇豆製品。',address:'中正區青島西路 13 號',map:'https://www.google.com/maps/search/?api=1&query=青島飯糰+青島西路13號',alert:'每日約 06:30–11:00；售完可能提早收檔'},
+{time:'09:50',title:'返酒店食早餐＋休息',tag:'RESET',duration:'約 45 分鐘',note:'買完原路返酒店，慢慢食飯糰、整理隨身物品，10:35 再出發。',route:'步行約 15–20 分鐘；或 Uber 約 5–10 分鐘。'},
+{time:'10:35',title:'前往華山',tag:'MOVE',duration:'約 15–30 分鐘',note:'Uber 約 10–15 分鐘；或北門站搭綠線到西門，轉藍線到忠孝新生，1 號出口步行約 5 分鐘。'},
+{time:'11:05',title:'華山 1914 文創園區',tag:'WALK',duration:'約 2 小時',note:'集中逛展店、文創小店及園區；13:05 左右離開去中山。',map:'https://www.google.com/maps/search/?api=1&query=華山1914文化創意產業園區'},
+{time:'13:05',title:'華山 → 中山',tag:'MRT',duration:'約 20–25 分鐘',note:'忠孝新生站搭藍線到台北車站，轉紅線 1 站到中山；或 Uber 約 10–15 分鐘。'},
+{time:'13:30',title:'PATTIE-O DINER 中山店',tag:'EAT',duration:'約 60–70 分鐘',note:'赤峰街的 Smash Burger。每人低消 NT$399；不要點菇類配搭，醬汁要再確認無豆製品。先按下方按鈕登記候位，收到通知再回店。',address:'大同區赤峰街 8 巷 20-1 號',map:'https://www.google.com/maps/search/?api=1&query=PATTIE-O+DINER+中山店',alert:'須使用線上系統候位；如連結失效，以店門口最新 QR Code 為準',queueUrl:'https://inline.app/-OsPIu230tqM5E79LJvI:inline-live-4/-OsPIu8Wov-BpNRorSX7/waiting'},
+{time:'14:45',title:'赤峰街＋坪林手',tag:'SHOP',duration:'約 2 小時 30 分',note:'食完已經身處赤峰街，可慢慢行；坪林手 20:00 關門，行攰可用 Coffee Break。',address:'大同區赤峰街 53 巷 23 號',map:'https://www.google.com/maps/search/?api=1&query=坪林手+赤峰店'},
+{time:'17:15',title:'前往 Relax 33',tag:'MOVE',duration:'約 5–15 分鐘',note:'由坪林手步行約 10–15 分鐘；或 Uber 約 5–10 分鐘。提早到達辦登記、換鞋。'},
+{time:'17:30',title:'Relax 33 莊園按摩',tag:'SPA',duration:'90 分鐘＋緩衝',note:'建議預約 17:30；預留到 19:15 才離開，包括更衣及茶點。先在 Klook 購買療程，再用官方預約頁選擇時段。',address:'中山區中山北路二段 2 號 11 樓',map:'https://www.google.com/maps/search/?api=1&query=Relax+33+Massage+Spa+and+Lounge',bookingUrl:'https://www.ezpretty.com.tw/ezpretty/aio#/62cd30e9fbebad5b3733d7b75335c8e3',bookingLabel:'BOOK APPOINTMENT',purchaseUrl:'https://www.klook.com/zh-TW/activity/33117-relax-33-massage-spa-experience-taipei/'},
+{time:'19:15',title:'寶雅 POYA',tag:'SHOP',duration:'約 35 分鐘',note:'建議去台北南京東店，買化妝品／護膚品後再行去夜市。',address:'中山區南京東路二段 15 號 1 樓',map:'https://www.google.com/maps/search/?api=1&query=寶雅+台北南京東店'},
+{time:'20:05',title:'寧夏夜市',tag:'NIGHT',duration:'1–1.5 小時',note:'Solo份量：月氏激蛋蔥油餅＋炸魷魚；食得落先加蚵仔煎。已刪走豬肝湯及蛋黃芋餅。',route:'由寶雅步行約 16–20 分鐘；或 Uber 約 5–10 分鐘。',map:'https://www.google.com/maps/search/?api=1&query=寧夏夜市'},
+{time:'22:00',title:'返酒店',tag:'MOVE',duration:'約 5–15 分鐘',note:'步行約 15 分鐘；或 Uber 約 5–10 分鐘，夜晚可按體力選擇。'}]},
+{date:'9.02',weekday:'WED',title:'大稻埕・月老・回港',color:'gold',stops:[
+{time:'08:40',title:'起身＋簡單執行李',tag:'PACK',duration:'20 分鐘',note:'先收好大部分行李，帶房卡、電話同細袋出去食早餐。'},
+{time:'09:00',title:'尚雯早午餐',tag:'BREAKFAST',duration:'約 40–45 分鐘',note:'在地台式早餐：建議原味蛋餅＋蘿蔔糕＋鮮奶茶；如果想食吐司，就同蘿蔔糕二選一，Solo 份量會舒服啲。不要豆漿，醬汁及配料先確認無豆類、豆製品或菇。',route:'酒店步行約 6–8 分鐘；食完沿長安西路步行返酒店。',address:'大同區長安西路 231 號',map:'https://www.google.com/maps/search/?api=1&query=尚雯早午餐+長安西路231號',alert:'星期三 05:30–13:30；座位不多，以街坊早餐店形式為主'},
+{time:'09:50',title:'返酒店執好行李',tag:'PACK',duration:'40 分鐘',note:'確認證件、充電器、手信；退房後行李先留酒店。'},
+{time:'10:30',title:'Check-out＋寄存行李',tag:'HOTEL',duration:'15 分鐘',note:'同酒店確認傍晚取行李位置。'},
+{time:'10:45',title:'前往大稻埕',tag:'MOVE',duration:'約 5–15 分鐘',note:'去霞海城隍廟：步行約 15 分鐘；或 Uber 約 5–10 分鐘。'},
+{time:'11:05',title:'霞海城隍廟拜月老',tag:'TEMPLE',duration:'約 35 分鐘',note:'第一次可先到服務台問參拜流程；廟內空間細，隨身袋盡量輕便。下方已放好你的月老條件稿，打開可直接照讀。',address:'大同區迪化街一段 61 號',map:'https://www.google.com/maps/search/?api=1&query=台北霞海城隍廟',prayer:true},
+{time:'11:45',title:'永樂蔥油餅',tag:'SNACK',duration:'約 20–30 分鐘',note:'Solo 建議叫半張蔥油餅（NT$45）已夠；芝麻球內有紅豆泥，按你飲食偏好不要點。現做可能要等，食完再沿迪化街向北行。',route:'由霞海城隍廟步行約 4–6 分鐘。',address:'大同區迪化街一段 21 號（永樂市場附近）',map:'https://www.google.com/maps/search/?api=1&query=永樂蔥油餅+迪化街一段21號',alert:'網上資料約 10:00–17:30；出發前再看店家最新公告'},
+{time:'12:20',title:'蔡記迪化街古早味蚵嗲',tag:'SNACK',duration:'約 35–45 分鐘',note:'主食蚵嗲（約 NT$60）；想再試一款就加韭菜條，菜頭粿留作二選一，避免一個人叫太多炸物。醬汁可先少落，並確認沒有豆類／豆製品。',route:'由永樂市場步行約 6–9 分鐘；若現場排隊長，可先登記／觀察隊伍再決定。',address:'大同區民生西路 362 巷 40 號',map:'https://www.google.com/maps/search/?api=1&query=蔡記迪化街古早味蚵嗲',alert:'星期三通常營業，網上資料約 10:00–17:30；熱門時段可能排隊'},
+{time:'13:05',title:'迪化街慢慢行＋買手信',tag:'SHOP',duration:'1 小時 30 分',note:'由民生西路一帶向北行，沿途看乾貨、茶行、老宅與文創店；兩間小食已代替午餐，不用再趕正餐訂位。',map:'https://www.google.com/maps/search/?api=1&query=迪化街一段'},
+{time:'14:40',title:'COFE 喫茶・咖啡',tag:'CAFE',duration:'約 60 分鐘',note:'只作休息：一杯咖啡，想食先加一件甜品。在「印花作夥」2 樓；如果前面排隊較耐，可順延到 15:00。',address:'大同區迪化街一段 248 號 2 樓',map:'https://www.google.com/maps/search/?api=1&query=COFE+喫茶咖啡'},
+{time:'16:30',title:'返回酒店取行李',tag:'TAXI',duration:'約 15–20 分鐘',note:'有行李同手信，建議由 COFE 直接叫車返酒店。'},
+{time:'17:05',title:'步行到 A1 台北車站',tag:'WALK',duration:'約 10 分鐘',note:'跟機場捷運指示；預留入站、買票及等車時間。'},
+{time:'17:30',title:'機場捷運直達車 → T1',tag:'TRAIN',duration:'約 35 分鐘',note:'比原先 18:00 再提早半小時，對 21:25 的國際航班較穩陣。建議不遲於 17:45 上車。'},
+{time:'18:10',title:'抵達桃園機場 T1',tag:'AIRPORT',duration:'3 小時 15 分',note:'辦理登機、托運、安檢及晚餐；UO117 預定 21:25 起飛。',alert:'航班時間仍要於出發前 24–48 小時再確認'},
+{time:'21:25',title:'UO117 台北 → 香港',tag:'FLIGHT',duration:'約 1 小時 55 分',note:'預定 23:20 抵達香港 T1。'}]}];
+
+const routeLinks=[
+  'https://www.google.com/maps/dir/城市商旅台北站前館/西門金鋒魯肉飯/AIR+SPACE+LADY+西門店/京站時尚廣場/城市商旅台北站前館/南機場夜市',
+  'https://www.google.com/maps/dir/城市商旅台北站前館/青島飯糰/華山1914文化創意產業園區/PATTIE-O+DINER+中山店/坪林手赤峰店/Relax+33/寧夏夜市',
+  'https://www.google.com/maps/dir/城市商旅台北站前館/尚雯早午餐/城市商旅台北站前館/台北霞海城隍廟/永樂蔥油餅/蔡記迪化街古早味蚵嗲/迪化街/COFE喫茶咖啡/A1台北車站'
+];
+const prayerScript=`月老您好，我叫＿＿＿，出生於＿＿＿，現居香港，目前單身。
+
+我希望遇到一位28至29歲、身高約182厘米、居住在大埔，並且從事醫療行業的男士。希望他外形陽光、整潔，待人溫柔，亦是我會有吸引力和心動感覺的類型。
+
+我希望他誠實、聰明和細心，理解力高，傾偈有內容，會留意我的感受和需要。他要有自己的想法，遇到事情可以作決定、承擔責任，不會因為怕麻煩而逃避問題。發生分歧時，他願意直接溝通，不會失蹤、冷暴力或者拖住不處理。
+
+生活方面，希望他不吸煙，可以適量飲酒。偶爾跟朋友夜蒲沒有問題，但會主動告知行程、保持分寸，對感情忠誠，不做越界的事。他與前度已經完全處理好關係，不再私下聯絡或保持曖昧。
+
+我希望大家每星期可以見面約三次，平日亦會透過文字和電話保持聯絡，不需要我長期猜測他的想法或追問行蹤。他對我、家人、朋友、服務員及陌生人都有禮貌，不會看不起或無禮對待別人。
+
+我希望我們可以互相喜歡、互相尊重，相處時安心、自然和開心。結婚和生小朋友不是必要條件，可以在關係穩定後，按大家真正的想法共同決定。
+
+如果遇到這段合適的緣分，我亦會誠實溝通、尊重對方、認真經營和珍惜這段關係。希望月老幫我牽引一段健康、專一、適合我的感情。`;
+const reservations=[
+  {type:'BOOKED',title:'城市商旅站前館',detail:'31 AUG — 02 SEP',meta:'已預訂 · 台北市大同區塔城街 11 號',href:'https://www.google.com/maps/search/?api=1&query=城市商旅台北站前館'},
+  {type:'SPA',title:'Relax 33',detail:'01 SEP · 17:30',meta:'EZPretty 官方預約時段',href:'https://www.ezpretty.com.tw/ezpretty/aio#/62cd30e9fbebad5b3733d7b75335c8e3'},
+  {type:'FLIGHT',title:'HX252 Check-in',detail:'31 AUG · 09:15',meta:'HKG T2 → TPE T2',href:'https://www.hongkongairlines.com/'},
+  {type:'FLIGHT',title:'UO117 Check-in',detail:'02 SEP · 21:25',meta:'TPE T1 → HKG T1',href:'https://www.hkexpress.com/'}
+];
+const checklist=['申請及列印入台證','兌換少量新台幣現金','購買／啟用台灣 eSIM','預約 Relax 33','HX252 去程網上 Check-in','UO117 回程網上 Check-in','悠遊卡增值約 NT$600','帶證件、充電器及雨傘'];
+const packingGroups=[
+  {title:'WEAR ON DEPARTURE',subtitle:'著住出發・不計入行李',items:['快乾上衣 × 1','薄身快乾長褲 × 1','內衣褲 × 1套','薄襪 × 1對','舒適防滑波鞋 × 1對']},
+  {title:'IN THE CASE',subtitle:'衣物・Hand-carry',items:['快乾上衣 × 2','輕薄後備短褲／裙 × 1','內衣褲 × 2套','薄襪 × 2對','輕薄睡衣 × 1套','摺傘 × 1','防水袋／膠袋 × 2']},
+  {title:'BEAUTY',subtitle:'每件液體不超過 100 ml',items:['洗面','化妝水／Toner','精華（可選）','面霜／乳液','防曬','卸妝產品','粉底／氣墊','遮瑕','眉筆','胭脂','小眼影盤','眼線','睫毛液','唇膏 × 1–2','粉撲／化妝掃','化妝棉＋棉花棒','細鏡']},
+  {title:'WASH & ESSENTIALS',subtitle:'洗漱・備用品・電子用品',items:['牙刷','旅行裝牙膏','牙線／牙線棒','梳＋髮圈／髮夾','止汗劑','後備紙巾＋濕紙巾','女性衛生用品','隱形眼鏡＋後備鏡片／小支藥水','充電器＋長充電線','後備藥物＋膠布']},
+  {title:'DAY BAG',subtitle:'兩程限 40×25×15cm 內・保持輕身',items:['電話','細銀包＋信用卡＋現金','護照＋入台證（放拉鏈格）','悠遊卡','酒店房卡／地址截圖','尿袋＋短充電線','耳機','紙巾＋少量濕紙巾','細支消毒搓手液','防曬＋唇膏／氣墊','當日所需藥物','摺傘','太陽眼鏡','空水樽（過安檢後入水）','可摺購物袋']}
+];
+const packingItems=packingGroups.flatMap(g=>g.items);
+const prep=[
+  {no:'01',label:'ENTRY',title:'入台證',status:'TO DO',text:'合資格港澳居民可免費網上申請臨時入境停留許可；批出後要自行列印，並帶有效期至少 3 個月的護照及回程機票。',href:'https://niaspeedy.immigration.gov.tw/nia_southeast/',link:'移民署網上申請 ↗'},
+  {no:'02',label:'MONEY',title:'悠遊卡 NT$600',status:'PLAN',text:'兩程機捷約 NT$320，市內捷運約 NT$70–100，再留約 NT$100 機動額。建議增值 NT$600；買卡約 NT$100–120 另計，的士不包括。機捷另買票的話，增值 NT$250–300 已足夠。'},
+  {no:'03',label:'DATA',title:'電話卡 / eSIM',status:'TO DO',text:'三日行程用 3–5 日數據方案已足夠。支援 eSIM 就出發前安裝、抵台才開數據；否則可在桃園 T2 電訊櫃位辦實體卡。'}
+];
+const backups=[
+  {day:'DAY 1',items:['西門金鋒休息 → 改食天天利美食坊','Pop-up 太多人 → 先買最想要的，拍照可略過','太攰 → 南機場直接叫車來回']},
+  {day:'DAY 2',items:['早餐售罄 → 台北車站附近早餐店','華山落雨 → 集中逛室內展館','寧夏太多人 → 提早返酒店休息']},
+  {day:'DAY 3',items:['蔡記排隊太長 → 只食永樂蔥油餅，再去 Cafe','COFE 店休 → 迪化街其他咖啡店','時間不足 → 先刪 Cafe，不刪機場緩衝']}
+];
+const cafes=[
+  {day:'DAY 1',title:'MKCR 山小孩咖啡',when:'提早行完西門時',note:'低消只需每人一杯飲品，甜品自選；兩層座位可望北門，適合坐 45–60 分鐘。',href:'https://www.google.com/maps/search/?api=1&query=MKCR+山小孩咖啡+忠孝西路126號'},
+  {day:'DAY 2',title:'興波咖啡・華山旗艦店',when:'華山唔想再行時',note:'以咖啡為主，想食先加小甜品；星期二約 10:00–17:00。',href:'https://www.google.com/maps/search/?api=1&query=興波咖啡+華山旗艦店'},
+  {day:'DAY 3',title:'COFE 喫茶・咖啡',when:'食完兩間小食、行攰時',note:'一杯咖啡或加一件甜品便可；本身已排 14:40，前面排隊耐亦可順延。',href:'https://www.google.com/maps/search/?api=1&query=COFE+喫茶咖啡'}
+];
+
+export default function Home(){
+const[active,setActive]=useState(0);const[done,setDone]=useState<Record<number,boolean>>({});const[packDone,setPackDone]=useState<Record<number,boolean>>({});const[loaded,setLoaded]=useState(false);const[copied,setCopied]=useState(false);const day=days[active];
+useEffect(()=>{try{const saved=localStorage.getItem('taipei-checklist-v2');if(saved)setDone(JSON.parse(saved));const packed=localStorage.getItem('taipei-packing-v1');if(packed)setPackDone(JSON.parse(packed))}catch{}setLoaded(true)},[]);
+const toggle=(i:number)=>{const next={...done,[i]:!done[i]};setDone(next);localStorage.setItem('taipei-checklist-v2',JSON.stringify(next))};
+const togglePack=(i:number)=>{const next={...packDone,[i]:!packDone[i]};setPackDone(next);localStorage.setItem('taipei-packing-v1',JSON.stringify(next))};
+const tripStart=new Date('2026-08-31T00:00:00+08:00');const now=new Date();const daysAway=Math.max(0,Math.ceil((tripStart.getTime()-now.getTime())/86400000));
+const todayIndex=now<new Date('2026-09-01T00:00:00+08:00')?0:now<new Date('2026-09-02T00:00:00+08:00')?1:2;
+return <main>
+<section className="hero"><nav className="topbar"><span className="brand">COKI / 2026</span><button onClick={()=>window.print()}>PRINT</button></nav><div className="hero-copy"><p className="eyebrow">31 AUG — 02 SEP · HONG KONG TO TAIWAN</p><h1>TAIPEI</h1><p className="intro">台北三日兩夜 · 慢遊行程</p></div><div className="hero-meta"><span>3 DAYS</span><span>2 NIGHTS</span><span>HKG ↔ TPE</span></div></section>
+<section className="today-bar"><div><p className="eyebrow">TODAY MODE</p><b>{daysAway>0?`${daysAway} DAYS TO GO`:`DAY ${todayIndex+1} · ${days[todayIndex].title}`}</b><span>{daysAway>0?'行程開始前可先預覽 Day 1':'下一站資料已準備好'}</span></div><button onClick={()=>{setActive(todayIndex);document.querySelector('.planner')?.scrollIntoView({behavior:'smooth'})}}>OPEN TODAY <span>→</span></button></section>
+<section className="utility prep-tools"><header className="section-head"><div><p className="eyebrow">01 / PRE-TRIP</p><h2>GET READY</h2><small className="zh-subtitle">出發前 Checklist 及預約</small></div><p>先完成兩程 Check-in 同必要準備；酒店已標示為完成預訂。</p></header><div className="tools-grid"><article className="checklist"><div className="tool-title"><span>CHECKLIST</span><b>{Object.values(done).filter(Boolean).length} / {checklist.length}</b></div>{loaded&&checklist.map((item,i)=><button key={item} className={done[i]?'checked':''} onClick={()=>toggle(i)}><i>{done[i]?'✓':''}</i><span>{item}</span></button>)}</article><article className="booking-list"><div className="tool-title"><span>RESERVATIONS</span><b>{String(reservations.length).padStart(2,'0')}</b></div>{reservations.map(r=><a key={r.title} href={r.href} target="_blank" rel="noreferrer"><small>{r.type}</small><div><b>{r.title}</b><span>{r.detail} · {r.meta}</span></div><i>↗</i></a>)}</article></div></section>
+<section className="packing"><header className="section-head"><div><p className="eyebrow">02 / HAND-CARRY</p><h2>PACKING LIST</h2><small className="zh-subtitle">兩晚三日・同一條主力下身</small></div><div className="packing-summary"><b>{Object.values(packDone).filter(Boolean).length} / {packingItems.length}</b><span>PACKED</span></div></header><div className="weather-note"><b>31–36°C</b><span>炎熱潮濕；同一條薄身快乾長褲可以著三日，但要帶一條極輕後備下身。已刪除冷氣外套。</span></div><div className="packing-grid">{loaded&&packingGroups.map((group,groupIndex)=>{const offset=packingGroups.slice(0,groupIndex).reduce((n,g)=>n+g.items.length,0);return <article key={group.title}><div className="pack-head"><div><b>{group.title}</b><span>{group.subtitle}</span></div><i>{group.items.filter((_,i)=>packDone[offset+i]).length}/{group.items.length}</i></div><div className="pack-items">{group.items.map((item,i)=>{const index=offset+i;return <button key={item} className={packDone[index]?'checked':''} onClick={()=>togglePack(index)}><i>{packDone[index]?'✓':''}</i><span>{item}</span></button>})}</div></article>})}</div><div className="baggage-rule"><b>YOUR CONFIRMED ALLOWANCE</b><span><strong>HX252：</strong>1個手提喼 56×36×23cm＋1個隨身袋 40×30×15cm，兩件合計最多 7kg；另包23kg寄艙。<br/><strong>UO117：</strong>已購買1個手提喼 56×36×23cm＋1個隨身袋 40×25×20cm，兩件合計最多 7kg；沒有免費寄艙。為兩程共用同一個袋，請以較嚴格的 <strong>40×25×15cm</strong> 為上限。</span><div><a href="https://content.hongkongairlines.com/en_CA/fly-with-us/baggage/handcarry" target="_blank" rel="noreferrer">HX RULES ↗</a><a href="https://www.hkexpress.com/zh-HK/Plan/Extras/Baggage/Carry-On-Baggage" target="_blank" rel="noreferrer">UO RULES ↗</a></div></div><p className="packing-foot">酒店提供洗頭水、護髮素、沐浴露及風筒，不用自帶。所有液體集中放入透明密實袋；完整化妝及洗漱用品留在手提喼，隨身袋只放即用物品。回程購物後仍要保持袋＋喼合計不超過 7kg。</p></section>
+<section className="prep"><header className="section-head"><div><p className="eyebrow">01 / BEFORE YOU GO</p><h2>TRIP READY</h2><small className="zh-subtitle">出發前準備</small></div><p>四件最容易漏低、但會直接影響旅程的事。</p></header><div className="prep-grid">{prep.map(x=><article key={x.no} className={x.status==='ENDED'?'ended':''}><div className="prep-top"><span>{x.no} · {x.label}</span><i>{x.status}</i></div><h3>{x.title}</h3><p>{x.text}</p>{x.href&&<a href={x.href} target="_blank" rel="noreferrer">{x.link}</a>}</article>)}</div></section>
+<section className="flights"><header className="section-head"><div><p className="eyebrow">01 / TRAVEL</p><h2>FLIGHTS</h2><small className="zh-subtitle">來回航班</small></div><p>香港與台北同一時區，時間均為當地時間。</p></header><div className="route-map"><div className="city hkg"><b>HKG</b><span>HONG KONG</span></div><div className="arc"><i>✈</i></div><div className="city tpe"><b>TPE</b><span>TAOYUAN</span></div></div><div className="flight-cards"><article><div><span>OUTBOUND · 31 AUG</span><b>HX252</b><small>Hong Kong Airlines</small></div><div className="flight-time"><b>09:15</b><span>HKG T2</span></div><em>2h 00m</em><div className="flight-time end"><b>11:15</b><span>TPE T2</span></div></article><article><div><span>RETURN · 02 SEP</span><b>UO117</b><small>HK Express</small></div><div className="flight-time"><b>21:25</b><span>TPE T1</span></div><em>1h 55m</em><div className="flight-time end"><b>23:20</b><span>HKG T1</span></div></article></div><p className="verify">航班資料以 2026-08-25 查得時間為基礎；出發前 24–48 小時請再查看航空公司通知。</p></section>
+<section className="planner"><header className="section-head"><div><p className="eyebrow">02 / ITINERARY</p><h2>DAILY PLAN</h2><small className="zh-subtitle">每日行程</small></div><p>各段列出步行及交通時間，當日按天氣和體力選擇。</p></header>
+<div className="day-tabs" role="tablist" aria-label="選擇日子">{days.map((d,i)=><button key={d.date} className={active===i?'active':''} onClick={()=>setActive(i)} role="tab" aria-selected={active===i}><b>{d.weekday}</b><span>{d.date}</span><small>{d.title}</small></button>)}</div>
+<div className="route-overview"><div className="route-head"><div><p className="eyebrow">DAY ROUTE</p><b>今日路線概覽</b></div><a href={routeLinks[active]} target="_blank" rel="noreferrer">OPEN FULL ROUTE ↗</a></div><div className="route-stops">{day.stops.filter(s=>['EAT','SHOP','POPUP','NIGHT','WALK','SPA','TEMPLE','LUNCH','SNACK','CAFE','BREAKFAST'].includes(s.tag)).map((s,i)=><span key={s.title}><i>{String(i+1).padStart(2,'0')}</i>{s.title.replace(/・.*/,'')}</span>)}</div></div>
+<div className={`day-title ${day.color}`}><span>DAY {active+1}</span><h3>{day.title}</h3><p>{day.stops.length} STOPS</p></div><div className="timeline">{day.stops.map((s,i)=><article className="stop" key={`${s.time}-${s.title}`}><div className="time"><b>{s.time}</b><span>{s.duration}</span></div><div className="track"><span>{String(i+1).padStart(2,'0')}</span></div><div className="card"><div className="card-top"><span className="tag">{s.tag}</span>{s.map&&<a href={s.map} target="_blank" rel="noreferrer">開地圖 ↗</a>}</div><h4>{s.title}</h4>{s.alert&&<p className="alert">● {s.alert}</p>}<p>{s.note}</p>{s.prayer&&<details className="prayer-box"><summary><span>月老條件稿</span><i>OPEN ＋</i></summary><div className="prayer-content"><div className="prayer-head"><b>直接照讀版本</b><button onClick={()=>{navigator.clipboard.writeText(prayerScript);setCopied(true);setTimeout(()=>setCopied(false),1800)}}>{copied?'COPIED ✓':'COPY SCRIPT'}</button></div>{prayerScript.split('\n\n').map((text,index)=><p key={index}>{text}</p>)}</div></details>}{s.queueUrl&&<div className="queue-box"><div><b>ONLINE WAITLIST</b><span>輸入姓名、人數及電話登記；完成後留意 LINE／語音／簡訊通知。</span></div><a className="queue-button" href={s.queueUrl} target="_blank" rel="noreferrer">OPEN ONLINE QUEUE <i>↗</i></a></div>} {(s.bookingUrl||s.purchaseUrl)&&<div className="booking-actions">{s.bookingUrl&&<a className="booking-button" href={s.bookingUrl} target="_blank" rel="noreferrer">{s.bookingLabel||'BOOK NOW'} <i>↗</i></a>}{s.purchaseUrl&&<a className="purchase-button" href={s.purchaseUrl} target="_blank" rel="noreferrer">BUY ON KLOOK <i>↗</i></a>}</div>}{s.route&&<p className="route"><b>交通</b>{s.route}</p>}{s.address&&<p className="address">{s.address}</p>}</div></article>)}</div></section>
+<section className="quick"><div><p className="eyebrow">QUICK NOTES</p><h2>Solo 食法</h2></div><div className="note-grid"><article><span>01</span><h3>迪化街主選</h3><p>Day 3 不吃正餐：半張永樂蔥油餅＋一份蔡記蚵嗲；仍想試才在韭菜條與菜頭粿之間二選一。</p></article><article><span>02</span><h3>飲食備註</h3><p>每餐先講：「我唔食菇、豆類同豆製品，麻煩幫我確認配菜同醬汁。」永樂芝麻球有紅豆泥，已不建議。</p></article><article><span>03</span><h3>排隊取捨</h3><p>蔡記如果排隊太長就直接略過，不需要為一款小食壓縮 Cafe 或去機場的緩衝時間。</p></article><article><span>04</span><h3>夜市份量</h3><p>每次只點一至兩款，食完先決定下一站；已刪走豬肝湯及蛋黃芋餅。</p></article></div></section>
+<section className="cafe-breaks"><header className="section-head"><div><p className="eyebrow">OPTIONAL / REST</p><h2>COFFEE BREAKS</h2><small className="zh-subtitle">只飲咖啡／甜品，不當正餐</small></div><p>提早行完街就坐低飲一杯，想食先加一件甜品，保留正餐胃口。</p></header><div className="cafe-grid">{cafes.map(c=><a key={c.day} href={c.href} target="_blank" rel="noreferrer"><span>{c.day} · {c.when}</span><h3>{c.title}</h3><p>{c.note}</p><i>OPEN MAP ↗</i></a>)}</div></section>
+<section className="backup"><header className="section-head"><div><p className="eyebrow">05 / PLAN B</p><h2>BACKUP</h2><small className="zh-subtitle">臨時替代方案</small></div><p>店舖休息、落雨或太攰時，直接按日子採用。</p></header><div className="backup-grid">{backups.map(b=><article key={b.day}><span>{b.day}</span>{b.items.map(x=><p key={x}>{x}</p>)}</article>)}</div></section>
+<footer><p>慢遊台北 · 食得開心 · 行得舒服</p><span>UPDATED 25 AUG 2026</span></footer></main>}
