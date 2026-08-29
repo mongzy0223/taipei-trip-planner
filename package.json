@@ -9,7 +9,7 @@
     "dev": "vinext dev",
     "build": "vinext build",
     "build:github": "vite build --config vite.github.config.ts",
-    "encrypt:github": "staticrypt github-dist/index.html -d encrypted --config false --remember 7 --template-title 'Coki Taipei Trip' --template-instructions 'Enter your trip password to continue.' --template-button 'OPEN TRIP' --template-placeholder 'Trip password' --template-error 'Password is not correct.' --template-color-primary '#e56f50' --template-color-secondary '#f4efe7'",
+    "encrypt:github": "staticrypt github-dist/index.html -d encrypted --config false --remember 7 --short --template-title 'Coki Taipei Trip' --template-instructions 'Enter your trip password to continue.' --template-button 'OPEN TRIP' --template-placeholder 'Trip password' --template-error 'Password is not correct.' --template-color-primary '#e56f50' --template-color-secondary '#f4efe7'",
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
   },
